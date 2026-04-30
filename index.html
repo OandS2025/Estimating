@@ -221,6 +221,9 @@
       <label>Waste Factor (%)</label>
       <input type="number" id="wasteFactor" value="5">
 
+      <label>Mesh Sheet Rate ($/sheet)</label>
+      <input type="number" id="meshRate" value="85">
+
       <label>Bar / Extra Reinforcement Notes</label>
       <textarea id="reoNotes"></textarea>
     </div>
@@ -249,19 +252,34 @@
 
       <label>Pier Depth (m)</label>
       <input type="number" id="pierDepth">
+
+      <label>Drill, Supply &amp; Place Rate ($/pier)</label>
+      <input type="number" id="pierRate" value="350">
     </div>
 
     <div class="box">
-      <h3>Earthworks</h3>
+      <h3>Earthworks / Excavation</h3>
 
-      <label>Cut Volume - Solid (m³)</label>
-      <input type="number" id="cutVolume">
+      <label>Site Cut Excavation Volume (m³)</label>
+      <input type="number" id="siteCutVolume">
 
-      <label>Fill Volume (m³)</label>
-      <input type="number" id="fillVolume">
+      <label>Site Cut Rate ($/m³)</label>
+      <input type="number" id="siteCutRate" value="25">
+
+      <label>Basement Excavation Volume (m³)</label>
+      <input type="number" id="basementVolume">
+
+      <label>Basement Excavation Rate ($/m³)</label>
+      <input type="number" id="basementRate" value="55">
+
+      <label>Soil Removal – Solid Volume (m³)</label>
+      <input type="number" id="soilSolidVolume">
 
       <label>Loose Conversion Factor</label>
       <input type="number" id="looseFactor" value="1.30" step="0.01">
+
+      <label>Soil Removal Rate ($/loose m³)</label>
+      <input type="number" id="soilRemovalRate" value="35">
 
       <label>Earthworks Notes</label>
       <textarea id="earthNotes"></textarea>
@@ -275,6 +293,9 @@
 
       <label>Blinding Thickness (mm)</label>
       <input type="number" id="blindingThickness">
+
+      <label>Blinding Rate ($/m³)</label>
+      <input type="number" id="blindingRate" value="180">
     </div>
 
     <div class="box">
@@ -285,6 +306,31 @@
 
       <label>Margin (%)</label>
       <input type="number" id="marginPct" value="15" step="0.5">
+    </div>
+
+    <div class="box">
+      <h3>Labour / Plant / Equipment</h3>
+
+      <label>Labour Days</label>
+      <input type="number" id="labourDays">
+
+      <label>Labour Daily Rate ($/day)</label>
+      <input type="number" id="labourDayRate" value="650">
+
+      <label>Excavator Days</label>
+      <input type="number" id="excavatorDays">
+
+      <label>Excavator Daily Rate ($/day)</label>
+      <input type="number" id="excavatorDayRate" value="1800">
+
+      <label>Other Plant / Equipment Allowance ($)</label>
+      <input type="number" id="otherPlant" value="0">
+
+      <label>Supervision / Management Allowance ($)</label>
+      <input type="number" id="supervision" value="0">
+
+      <label>Sundry Materials Allowance ($)</label>
+      <input type="number" id="sundry" value="0">
     </div>
 
     <div class="box">
@@ -325,62 +371,101 @@ function num(id) {
   return parseFloat(document.getElementById(id).value) || 0;
 }
 
+function aud(n) {
+  return '$' + (parseFloat(n) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 function generateEstimate() {
+  // Project
   const projectName = val("projectName");
   const builder = val("builder");
   const location = val("location");
   const deadline = val("deadline");
   const slabType = val("slabType");
 
+  // Concrete slab
   const slabArea = num("slabArea");
   const slabThickness = num("slabThickness");
   const slabVolume = slabArea * (slabThickness / 1000);
-
-  const concreteRate = parseFloat(document.getElementById("concreteRate").value) || 0;
-  const labourRate = parseFloat(document.getElementById("labourRate").value) || 0;
-  const pumpAllowance = parseFloat(document.getElementById("pumpAllowance").value) || 0;
+  const concreteRate = num("concreteRate");
+  const labourRate = num("labourRate");
+  const pumpAllowance = num("pumpAllowance");
   const concreteSupplyCost = slabVolume * concreteRate;
   const slabLabourCost = slabArea * labourRate;
   const slabTotalCost = concreteSupplyCost + slabLabourCost + pumpAllowance;
 
+  // Blinding
+  const blindingArea = num("blindingArea");
+  const blindingThickness = num("blindingThickness");
+  const blindingVolume = blindingArea * (blindingThickness / 1000);
+  const blindingRate = num("blindingRate");
+  const blindingCost = blindingVolume * blindingRate;
+
+  // Edge beam (volume only – for concrete summary)
+  const edgeLength = num("edgeLength");
+  const edgeWidth = num("edgeWidth") / 1000;
+  const edgeDepth = num("edgeDepth") / 1000;
+  const edgeBeamVolume = edgeLength * edgeWidth * edgeDepth;
+
+  // Reinforcement – mesh
+  const slabLength = num("slabLength");
+  const slabWidth = num("slabWidth");
+  const sheetArea = num("sheetArea");
+  const wasteFactor = num("wasteFactor");
+  const meshSheets = sheetArea > 0 ? Math.ceil((slabArea / sheetArea) * (1 + wasteFactor / 100)) : 0;
+  const meshRate = num("meshRate");
+  const meshCost = meshSheets * meshRate;
+
+  // Bored piers
+  const pierQty = num("pierQty");
+  const pierDiameter = num("pierDiameter");
+  const pierDepth = num("pierDepth");
+  const pierRadius = (pierDiameter / 1000) / 2;
+  const pierVolume = pierQty * Math.PI * pierRadius * pierRadius * pierDepth;
+  const pierRate = num("pierRate");
+  const pierCost = pierQty * pierRate;
+
+  // Earthworks / excavation
+  const siteCutVolume = num("siteCutVolume");
+  const siteCutRate = num("siteCutRate");
+  const siteCutCost = siteCutVolume * siteCutRate;
+
+  const basementVolume = num("basementVolume");
+  const basementRate = num("basementRate");
+  const basementCost = basementVolume * basementRate;
+
+  const soilSolidVolume = num("soilSolidVolume");
+  const looseFactor = num("looseFactor") || 1.30;
+  const soilLooseVolume = soilSolidVolume * looseFactor;
+  const soilRemovalRate = num("soilRemovalRate");
+  const soilRemovalCost = soilLooseVolume * soilRemovalRate;
+
+  // Labour / plant
+  const labourDays = num("labourDays");
+  const labourDayRate = num("labourDayRate");
+  const labourTotal = labourDays * labourDayRate;
+
+  const excavatorDays = num("excavatorDays");
+  const excavatorDayRate = num("excavatorDayRate");
+  const excavatorTotal = excavatorDays * excavatorDayRate;
+
+  const otherPlant = num("otherPlant");
+  const supervision = num("supervision");
+  const sundry = num("sundry");
+  const generalAllowanceTotal = labourTotal + excavatorTotal + otherPlant + supervision + sundry;
+
+  // Totals
+  const directCost = siteCutCost + basementCost + soilRemovalCost
+    + slabTotalCost + blindingCost + meshCost + pierCost + generalAllowanceTotal;
+
   const overheadPct = num("overheadPct") / 100;
   const marginPct = num("marginPct") / 100;
-  const directCost = slabTotalCost;
   const overheadAmt = directCost * overheadPct;
   const subtotalBeforeMargin = directCost + overheadAmt;
   const marginAmt = subtotalBeforeMargin * marginPct;
   const finalExGST = subtotalBeforeMargin + marginAmt;
   const gst = finalExGST * 0.10;
   const finalIncGST = finalExGST + gst;
-
-  const slabLength = num("slabLength");
-  const slabWidth = num("slabWidth");
-  const formworkPerimeter = slabLength && slabWidth ? (slabLength + slabWidth) * 2 : 0;
-
-  const sheetArea = num("sheetArea");
-  const wasteFactor = num("wasteFactor");
-  const meshSheets = sheetArea ? (slabArea / sheetArea) * (1 + wasteFactor / 100) : 0;
-
-  const edgeLength = num("edgeLength");
-  const edgeWidth = num("edgeWidth") / 1000;
-  const edgeDepth = num("edgeDepth") / 1000;
-  const edgeBeamVolume = edgeLength * edgeWidth * edgeDepth;
-
-  const pierQty = num("pierQty");
-  const pierDiameter = num("pierDiameter");
-  const pierDepth = num("pierDepth");
-  const pierRadius = (pierDiameter / 1000) / 2;
-  const pierVolume = pierQty * Math.PI * pierRadius * pierRadius * pierDepth;
-
-  const cutVolume = num("cutVolume");
-  const fillVolume = num("fillVolume");
-  const looseFactor = num("looseFactor");
-  const netCutFill = cutVolume - fillVolume;
-  const looseExport = netCutFill > 0 ? netCutFill * looseFactor : 0;
-
-  const blindingArea = num("blindingArea");
-  const blindingThickness = num("blindingThickness");
-  const blindingVolume = blindingArea * (blindingThickness / 1000);
 
   const totalConcrete = slabVolume + edgeBeamVolume + pierVolume + blindingVolume;
 
@@ -395,83 +480,103 @@ function generateEstimate() {
       <tr><td>Location</td><td>${location}</td></tr>
       <tr><td>Tender Deadline</td><td>${deadline}</td></tr>
       <tr><td>Slab Type</td><td>${slabType}</td></tr>
-      <tr><td>Pump Required</td><td>${val("pumpRequired")}</td></tr>
     </table>
 
-    <h3>Slab Cost Summary</h3>
+    <h3>Earthworks / Excavation</h3>
     <table>
-      <tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Cost</th></tr>
-      <tr><td>Concrete Supply</td><td>${slabVolume.toFixed(2)} m³</td><td>$${concreteRate.toFixed(2)}/m³</td><td>$${concreteSupplyCost.toFixed(2)}</td></tr>
-      <tr><td>Labour / Place / Finish</td><td>${slabArea.toFixed(2)} m²</td><td>$${labourRate.toFixed(2)}/m²</td><td>$${slabLabourCost.toFixed(2)}</td></tr>
-      <tr><td>Pump Allowance</td><td>—</td><td>—</td><td>$${pumpAllowance.toFixed(2)}</td></tr>
-      <tr class="highlight"><td colspan="3"><strong>Total Slab Cost</strong></td><td><strong>$${slabTotalCost.toFixed(2)}</strong></td></tr>
+      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th></tr>
+      <tr><td>Site Cut Excavation</td><td>${siteCutVolume.toFixed(2)}</td><td>m³</td><td>${aud(siteCutRate)}/m³</td><td>${aud(siteCutCost)}</td></tr>
+      <tr><td>Basement Excavation</td><td>${basementVolume.toFixed(2)}</td><td>m³</td><td>${aud(basementRate)}/m³</td><td>${aud(basementCost)}</td></tr>
+      <tr><td>Soil Removal – Solid Volume</td><td>${soilSolidVolume.toFixed(2)}</td><td>m³ solid</td><td>—</td><td>—</td></tr>
+      <tr><td>Soil Removal – Loose Volume (factor ${looseFactor.toFixed(2)})</td><td>${soilLooseVolume.toFixed(2)}</td><td>m³ loose</td><td>${aud(soilRemovalRate)}/m³</td><td>${aud(soilRemovalCost)}</td></tr>
     </table>
 
-    <h3>Concrete Quantity Takeoff</h3>
+    <h3>Concrete Slab</h3>
     <table>
-      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
-      <tr><td>Slab Area</td><td>${slabArea.toFixed(2)}</td><td>m²</td></tr>
-      <tr><td>Slab Thickness</td><td>${slabThickness.toFixed(0)}</td><td>mm</td></tr>
-      <tr><td>Slab Concrete Volume</td><td>${slabVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Edge Beam / Thickening Volume</td><td>${edgeBeamVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Bored Pier Concrete Volume</td><td>${pierVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Blinding Concrete Volume</td><td>${blindingVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr class="highlight"><td>Total Estimated Concrete</td><td>${totalConcrete.toFixed(2)}</td><td>m³</td></tr>
+      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th></tr>
+      <tr><td>Concrete Supply – ${slabType} (${slabThickness}mm)</td><td>${slabVolume.toFixed(2)}</td><td>m³</td><td>${aud(concreteRate)}/m³</td><td>${aud(concreteSupplyCost)}</td></tr>
+      <tr><td>Labour / Place / Finish</td><td>${slabArea.toFixed(2)}</td><td>m²</td><td>${aud(labourRate)}/m²</td><td>${aud(slabLabourCost)}</td></tr>
+      <tr><td>Pump Allowance</td><td>1</td><td>Item</td><td>—</td><td>${aud(pumpAllowance)}</td></tr>
+      <tr class="highlight"><td colspan="4"><strong>Slab Total</strong></td><td><strong>${aud(slabTotalCost)}</strong></td></tr>
     </table>
 
-    <h3>Reinforcement Takeoff</h3>
+    <h3>Blinding</h3>
     <table>
-      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
-      <tr><td>Mesh Type</td><td>${val("meshType")}</td><td>-</td></tr>
-      <tr><td>Mesh Sheet Allowance</td><td>${sheetArea.toFixed(2)}</td><td>m²/sheet</td></tr>
-      <tr><td>Waste Factor</td><td>${wasteFactor.toFixed(1)}</td><td>%</td></tr>
-      <tr class="highlight"><td>Estimated Mesh Sheets Required</td><td>${Math.ceil(meshSheets)}</td><td>sheets</td></tr>
+      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th></tr>
+      <tr><td>Blinding Concrete (${num("blindingThickness")}mm)</td><td>${blindingVolume.toFixed(2)}</td><td>m³</td><td>${aud(blindingRate)}/m³</td><td>${aud(blindingCost)}</td></tr>
     </table>
 
-    <h3>Earthworks Takeoff</h3>
+    <h3>Reinforcement</h3>
     <table>
-      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
-      <tr><td>Cut Volume - Solid</td><td>${cutVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Fill Volume</td><td>${fillVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Net Cut / Fill Difference</td><td>${netCutFill.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Loose Export Volume</td><td>${looseExport.toFixed(2)}</td><td>m³</td></tr>
+      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th></tr>
+      <tr><td>Mesh – ${val("meshType")} (incl. ${wasteFactor}% waste)</td><td>${meshSheets}</td><td>sheets</td><td>${aud(meshRate)}/sheet</td><td>${aud(meshCost)}</td></tr>
     </table>
 
-    <h3>Formwork / Perimeter</h3>
+    <h3>Bored Piers</h3>
     <table>
-      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
-      <tr><td>Estimated Slab Perimeter</td><td>${formworkPerimeter.toFixed(2)}</td><td>m</td></tr>
+      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th></tr>
+      <tr><td>Bored Piers – Ø${pierDiameter}mm × ${pierDepth}m (drill, supply &amp; place)</td><td>${pierQty}</td><td>piers</td><td>${aud(pierRate)}/pier</td><td>${aud(pierCost)}</td></tr>
+      <tr><td>Pier Concrete Volume (reference only)</td><td>${pierVolume.toFixed(2)}</td><td>m³</td><td>—</td><td>—</td></tr>
     </table>
 
-    <h3>Scope of Works</h3>
-    <ul>
-      <li>Review of structural, civil and architectural documentation.</li>
-      <li>Set-out coordination based on approved drawings.</li>
-      <li>Formwork preparation to slab edges, rebates, step-downs and thickening where applicable.</li>
-      <li>Supply and installation of nominated reinforcement as per structural documentation.</li>
-      <li>Concrete placement, screeding and finishing to nominated slab areas.</li>
-      <li>Installation of bored piers where nominated above.</li>
-      <li>Blinding layer where nominated above.</li>
-      <li>General coordination with builder and site team during works.</li>
-    </ul>
+    <h3>Labour / Plant / Equipment</h3>
+    <table>
+      <tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Total</th></tr>
+      <tr><td>Labour</td><td>${labourDays}</td><td>days</td><td>${aud(labourDayRate)}/day</td><td>${aud(labourTotal)}</td></tr>
+      <tr><td>Excavator</td><td>${excavatorDays}</td><td>days</td><td>${aud(excavatorDayRate)}/day</td><td>${aud(excavatorTotal)}</td></tr>
+      <tr><td>Other Plant / Equipment</td><td>1</td><td>Item</td><td>—</td><td>${aud(otherPlant)}</td></tr>
+      <tr><td>Supervision / Management</td><td>1</td><td>Item</td><td>—</td><td>${aud(supervision)}</td></tr>
+      <tr><td>Sundry Materials</td><td>1</td><td>Item</td><td>—</td><td>${aud(sundry)}</td></tr>
+      <tr class="highlight"><td colspan="4"><strong>Total General Allowances</strong></td><td><strong>${aud(generalAllowanceTotal)}</strong></td></tr>
+    </table>
 
-    <h3>Reinforcement Notes</h3>
-    <p>${val("reoNotes")}</p>
+    <h3>Cost Summary</h3>
+    <table>
+      <tr><th>Trade / Section</th><th>Amount</th></tr>
+      <tr><td>Site Cut Excavation</td><td>${aud(siteCutCost)}</td></tr>
+      <tr><td>Basement Excavation</td><td>${aud(basementCost)}</td></tr>
+      <tr><td>Soil Removal / Disposal</td><td>${aud(soilRemovalCost)}</td></tr>
+      <tr><td>Concrete Slab</td><td>${aud(slabTotalCost)}</td></tr>
+      <tr><td>Blinding</td><td>${aud(blindingCost)}</td></tr>
+      <tr><td>Bored Piers</td><td>${aud(pierCost)}</td></tr>
+      <tr><td>Reinforcement (Mesh)</td><td>${aud(meshCost)}</td></tr>
+      <tr><td>Labour</td><td>${aud(labourTotal)}</td></tr>
+      <tr><td>Excavator</td><td>${aud(excavatorTotal)}</td></tr>
+      <tr><td>Other Plant / Equipment</td><td>${aud(otherPlant)}</td></tr>
+      <tr><td>Supervision / Management</td><td>${aud(supervision)}</td></tr>
+      <tr><td>Sundry Materials</td><td>${aud(sundry)}</td></tr>
+      <tr class="highlight"><td><strong>Total Direct Cost</strong></td><td><strong>${aud(directCost)}</strong></td></tr>
+    </table>
 
-    <h3>Earthworks Notes</h3>
-    <p>${val("earthNotes")}</p>
+    <h3>Final Pricing Summary</h3>
+    <table>
+      <tr><th>Item</th><th>Amount</th></tr>
+      <tr><td>Total Direct Cost</td><td>${aud(directCost)}</td></tr>
+      <tr><td>Overhead (${num("overheadPct")}%)</td><td>${aud(overheadAmt)}</td></tr>
+      <tr><td>Subtotal (before margin)</td><td>${aud(subtotalBeforeMargin)}</td></tr>
+      <tr><td>Margin (${num("marginPct")}%)</td><td>${aud(marginAmt)}</td></tr>
+      <tr class="highlight"><td><strong>Final Price (Ex GST)</strong></td><td><strong>${aud(finalExGST)}</strong></td></tr>
+      <tr><td>GST (10%)</td><td>${aud(gst)}</td></tr>
+      <tr class="highlight"><td><strong>Final Price (Inc GST)</strong></td><td><strong>${aud(finalIncGST)}</strong></td></tr>
+    </table>
 
-    <h3>Special Inclusions</h3>
-    <p>${val("inclusions")}</p>
+    <h3>Concrete Quantity Summary</h3>
+    <table>
+      <tr><th>Description</th><th>Volume (m³)</th></tr>
+      <tr><td>Slab</td><td>${slabVolume.toFixed(2)}</td></tr>
+      <tr><td>Edge Beam / Thickening</td><td>${edgeBeamVolume.toFixed(2)}</td></tr>
+      <tr><td>Bored Piers</td><td>${pierVolume.toFixed(2)}</td></tr>
+      <tr><td>Blinding</td><td>${blindingVolume.toFixed(2)}</td></tr>
+      <tr class="highlight"><td><strong>Total Concrete</strong></td><td><strong>${totalConcrete.toFixed(2)}</strong></td></tr>
+    </table>
 
     <h3>Assumptions</h3>
     <ul>
-      <li>Quantities are based on information entered into this system.</li>
-      <li>Final quantities are subject to review against IFC drawings and site conditions.</li>
-      <li>Concrete volumes are calculated from nominated dimensions and do not include wastage unless separately allowed.</li>
-      <li>Mesh sheet quantity includes nominated waste factor.</li>
-      <li>Loose export volume is calculated using the nominated loose conversion factor.</li>
-      <li>No pricing, rates or dollar values are included in this BOQ.</li>
+      <li>Quantities are based on information entered and are subject to confirmation from IFC drawings and site conditions.</li>
+      <li>Labour and plant are charged as daily allowances.</li>
+      <li>Soil removal is based on loose volume using a loose conversion factor of ${looseFactor.toFixed(2)}.</li>
+      <li>Bored pier rate is per pier (drill, supply and place) – concrete volume shown for reference only.</li>
+      <li>Mesh sheet quantity includes a waste factor of ${wasteFactor}%.</li>
     </ul>
 
     <h3>Exclusions</h3>
@@ -481,20 +586,13 @@ function generateEstimate() {
       <li>Rock excavation unless specifically noted.</li>
       <li>Contaminated material handling unless specifically noted.</li>
       <li>Dewatering unless specifically noted.</li>
-      <li>${val("exclusions")}</li>
+      ${val("exclusions") ? `<li>${val("exclusions")}</li>` : ""}
     </ul>
 
-    <h3>Final Pricing Summary</h3>
-    <table>
-      <tr><th>Item</th><th>Amount</th></tr>
-      <tr><td>Direct Cost (Slab)</td><td>$${directCost.toFixed(2)}</td></tr>
-      <tr><td>Overhead (${num("overheadPct")}%)</td><td>$${overheadAmt.toFixed(2)}</td></tr>
-      <tr><td>Subtotal (before margin)</td><td>$${subtotalBeforeMargin.toFixed(2)}</td></tr>
-      <tr><td>Margin (${num("marginPct")}%)</td><td>$${marginAmt.toFixed(2)}</td></tr>
-      <tr class="highlight"><td><strong>Final Price (Ex GST)</strong></td><td><strong>$${finalExGST.toFixed(2)}</strong></td></tr>
-      <tr><td>GST (10%)</td><td>$${gst.toFixed(2)}</td></tr>
-      <tr class="highlight"><td><strong>Final Price (Inc GST)</strong></td><td><strong>$${finalIncGST.toFixed(2)}</strong></td></tr>
-    </table>
+    <h3>Notes</h3>
+    <p>${val("earthNotes") || "—"}</p>
+    <p>${val("reoNotes") || "—"}</p>
+    <p>${val("inclusions") || "—"}</p>
   `;
 }
 </script>

@@ -192,6 +192,15 @@
 
       <label>Slab Width (m) - Optional</label>
       <input type="number" id="slabWidth">
+
+      <label>Concrete Supply Rate ($/m³)</label>
+      <input type="number" id="concreteRate" value="220">
+
+      <label>Labour / Place / Finish Rate ($/m²)</label>
+      <input type="number" id="labourRate" value="60">
+
+      <label>Pump Allowance ($)</label>
+      <input type="number" id="pumpAllowance" value="0">
     </div>
 
     <div class="box">
@@ -269,6 +278,16 @@
     </div>
 
     <div class="box">
+      <h3>Margin &amp; GST</h3>
+
+      <label>Overhead (%)</label>
+      <input type="number" id="overheadPct" value="10" step="0.5">
+
+      <label>Margin (%)</label>
+      <input type="number" id="marginPct" value="15" step="0.5">
+    </div>
+
+    <div class="box">
       <h3>Scope Notes</h3>
 
       <label>Pump Required?</label>
@@ -317,6 +336,23 @@ function generateEstimate() {
   const slabThickness = num("slabThickness");
   const slabVolume = slabArea * (slabThickness / 1000);
 
+  const concreteRate = parseFloat(document.getElementById("concreteRate").value) || 0;
+  const labourRate = parseFloat(document.getElementById("labourRate").value) || 0;
+  const pumpAllowance = parseFloat(document.getElementById("pumpAllowance").value) || 0;
+  const concreteSupplyCost = slabVolume * concreteRate;
+  const slabLabourCost = slabArea * labourRate;
+  const slabTotalCost = concreteSupplyCost + slabLabourCost + pumpAllowance;
+
+  const overheadPct = num("overheadPct") / 100;
+  const marginPct = num("marginPct") / 100;
+  const directCost = slabTotalCost;
+  const overheadAmt = directCost * overheadPct;
+  const subtotalBeforeMargin = directCost + overheadAmt;
+  const marginAmt = subtotalBeforeMargin * marginPct;
+  const finalExGST = subtotalBeforeMargin + marginAmt;
+  const gst = finalExGST * 0.10;
+  const finalIncGST = finalExGST + gst;
+
   const slabLength = num("slabLength");
   const slabWidth = num("slabWidth");
   const formworkPerimeter = slabLength && slabWidth ? (slabLength + slabWidth) * 2 : 0;
@@ -360,6 +396,15 @@ function generateEstimate() {
       <tr><td>Tender Deadline</td><td>${deadline}</td></tr>
       <tr><td>Slab Type</td><td>${slabType}</td></tr>
       <tr><td>Pump Required</td><td>${val("pumpRequired")}</td></tr>
+    </table>
+
+    <h3>Slab Cost Summary</h3>
+    <table>
+      <tr><th>Item</th><th>Quantity</th><th>Rate</th><th>Cost</th></tr>
+      <tr><td>Concrete Supply</td><td>${slabVolume.toFixed(2)} m³</td><td>$${concreteRate.toFixed(2)}/m³</td><td>$${concreteSupplyCost.toFixed(2)}</td></tr>
+      <tr><td>Labour / Place / Finish</td><td>${slabArea.toFixed(2)} m²</td><td>$${labourRate.toFixed(2)}/m²</td><td>$${slabLabourCost.toFixed(2)}</td></tr>
+      <tr><td>Pump Allowance</td><td>—</td><td>—</td><td>$${pumpAllowance.toFixed(2)}</td></tr>
+      <tr class="highlight"><td colspan="3"><strong>Total Slab Cost</strong></td><td><strong>$${slabTotalCost.toFixed(2)}</strong></td></tr>
     </table>
 
     <h3>Concrete Quantity Takeoff</h3>
@@ -438,6 +483,18 @@ function generateEstimate() {
       <li>Dewatering unless specifically noted.</li>
       <li>${val("exclusions")}</li>
     </ul>
+
+    <h3>Final Pricing Summary</h3>
+    <table>
+      <tr><th>Item</th><th>Amount</th></tr>
+      <tr><td>Direct Cost (Slab)</td><td>$${directCost.toFixed(2)}</td></tr>
+      <tr><td>Overhead (${num("overheadPct")}%)</td><td>$${overheadAmt.toFixed(2)}</td></tr>
+      <tr><td>Subtotal (before margin)</td><td>$${subtotalBeforeMargin.toFixed(2)}</td></tr>
+      <tr><td>Margin (${num("marginPct")}%)</td><td>$${marginAmt.toFixed(2)}</td></tr>
+      <tr class="highlight"><td><strong>Final Price (Ex GST)</strong></td><td><strong>$${finalExGST.toFixed(2)}</strong></td></tr>
+      <tr><td>GST (10%)</td><td>$${gst.toFixed(2)}</td></tr>
+      <tr class="highlight"><td><strong>Final Price (Inc GST)</strong></td><td><strong>$${finalIncGST.toFixed(2)}</strong></td></tr>
+    </table>
   `;
 }
 </script>

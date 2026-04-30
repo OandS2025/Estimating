@@ -5,47 +5,47 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f3f4f6;
+      background: #f4f6f8;
       margin: 0;
       padding: 20px;
-      color: #222;
+      color: #1f2937;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: auto;
     }
 
     .header {
       background: #111827;
       color: white;
-      padding: 20px;
-      border-radius: 10px;
+      padding: 22px;
+      border-radius: 12px;
       margin-bottom: 20px;
     }
 
     .header h1 {
       margin: 0;
-      font-size: 26px;
+      font-size: 28px;
     }
 
     .header p {
-      margin: 5px 0 0;
+      margin: 6px 0 0;
       color: #d1d5db;
     }
 
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 18px;
     }
 
     .box {
       background: white;
       padding: 18px;
-      border-radius: 10px;
+      border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      margin-bottom: 15px;
+      margin-bottom: 18px;
     }
 
     h2, h3 {
@@ -56,19 +56,20 @@
       font-weight: bold;
       display: block;
       margin-top: 10px;
+      font-size: 14px;
     }
 
-    input, textarea, select {
+    input, select, textarea {
       width: 100%;
-      padding: 9px;
+      padding: 10px;
       margin-top: 5px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
       box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
 
     textarea {
-      height: 80px;
+      min-height: 80px;
     }
 
     button {
@@ -76,10 +77,10 @@
       color: white;
       border: none;
       padding: 14px 24px;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 16px;
-      margin: 10px 5px 20px 0;
+      margin: 10px 8px 20px 0;
     }
 
     button:hover {
@@ -88,19 +89,20 @@
 
     .result {
       background: white;
-      padding: 20px;
-      border-radius: 10px;
+      padding: 22px;
+      border-radius: 12px;
       border-left: 6px solid #111827;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin: 15px 0;
     }
 
     th, td {
-      border: 1px solid #ddd;
+      border: 1px solid #e5e7eb;
       padding: 10px;
       text-align: left;
     }
@@ -110,20 +112,31 @@
       color: white;
     }
 
+    .highlight {
+      font-weight: bold;
+      background: #f3f4f6;
+    }
+
     .small {
-      color: #666;
+      color: #6b7280;
       font-size: 13px;
     }
 
     @media print {
-      button, input, textarea, select, label {
+      button, input, select, textarea, label {
         display: none;
       }
+
       body {
         background: white;
       }
+
       .box {
         box-shadow: none;
+      }
+
+      .grid {
+        display: block;
       }
     }
   </style>
@@ -135,13 +148,13 @@
 
   <div class="header">
     <h1>O&S Concreting & Earthmoving</h1>
-    <p>Professional Estimating System – Concrete, Earthworks & Piling</p>
+    <p>Professional Slab, Reinforcement, Piling & Earthworks Estimating System</p>
   </div>
 
   <div class="grid">
 
     <div class="box">
-      <h3>Project Information</h3>
+      <h3>Project Details</h3>
 
       <label>Project Name</label>
       <input type="text" id="projectName">
@@ -174,15 +187,50 @@
       <label>Slab Thickness (mm)</label>
       <input type="number" id="slabThickness">
 
-      <label>Blinding Area (m²)</label>
-      <input type="number" id="blindingArea">
+      <label>Slab Length (m) - Optional</label>
+      <input type="number" id="slabLength">
 
-      <label>Blinding Thickness (mm)</label>
-      <input type="number" id="blindingThickness">
+      <label>Slab Width (m) - Optional</label>
+      <input type="number" id="slabWidth">
     </div>
 
     <div class="box">
-      <h3>Bored Piers / Piling</h3>
+      <h3>Reinforcement</h3>
+
+      <label>Mesh Type</label>
+      <select id="meshType">
+        <option>SL72</option>
+        <option>SL82</option>
+        <option>SL92</option>
+        <option>Double Mesh</option>
+        <option>As per structural drawings</option>
+      </select>
+
+      <label>Mesh Sheet Area Allowance (m² per sheet)</label>
+      <input type="number" id="sheetArea" value="11.52">
+
+      <label>Waste Factor (%)</label>
+      <input type="number" id="wasteFactor" value="5">
+
+      <label>Bar / Extra Reinforcement Notes</label>
+      <textarea id="reoNotes"></textarea>
+    </div>
+
+    <div class="box">
+      <h3>Edge Beam / Thickening</h3>
+
+      <label>Total Edge Beam Length (m)</label>
+      <input type="number" id="edgeLength">
+
+      <label>Edge Beam Width (mm)</label>
+      <input type="number" id="edgeWidth">
+
+      <label>Edge Beam Depth (mm)</label>
+      <input type="number" id="edgeDepth">
+    </div>
+
+    <div class="box">
+      <h3>Bored Piers</h3>
 
       <label>Number of Piers</label>
       <input type="number" id="pierQty">
@@ -197,31 +245,38 @@
     <div class="box">
       <h3>Earthworks</h3>
 
-      <label>Cut Volume (m³)</label>
+      <label>Cut Volume - Solid (m³)</label>
       <input type="number" id="cutVolume">
 
       <label>Fill Volume (m³)</label>
       <input type="number" id="fillVolume">
 
-      <label>Export / Disposal Volume (m³)</label>
-      <input type="number" id="exportVolume">
+      <label>Loose Conversion Factor</label>
+      <input type="number" id="looseFactor" value="1.30" step="0.01">
 
       <label>Earthworks Notes</label>
       <textarea id="earthNotes"></textarea>
     </div>
 
     <div class="box">
-      <h3>Reinforcement</h3>
+      <h3>Blinding</h3>
 
-      <label>Mesh Type</label>
-      <input type="text" id="meshType" placeholder="Example: SL92 / SL82 / Double mesh">
+      <label>Blinding Area (m²)</label>
+      <input type="number" id="blindingArea">
 
-      <label>Bar Reinforcement Notes</label>
-      <textarea id="reoNotes"></textarea>
+      <label>Blinding Thickness (mm)</label>
+      <input type="number" id="blindingThickness">
     </div>
 
     <div class="box">
       <h3>Scope Notes</h3>
+
+      <label>Pump Required?</label>
+      <select id="pumpRequired">
+        <option>Yes</option>
+        <option>No</option>
+        <option>To be confirmed</option>
+      </select>
 
       <label>Special Inclusions</label>
       <textarea id="inclusions"></textarea>
@@ -232,12 +287,12 @@
 
   </div>
 
-  <button onclick="generateEstimate()">Generate Tender BOQ</button>
+  <button onclick="generateEstimate()">Generate BOQ</button>
   <button onclick="window.print()">Print / Save as PDF</button>
 
   <div class="result" id="output">
     <h2>Tender BOQ will appear here</h2>
-    <p class="small">Enter the project details above and click Generate Tender BOQ.</p>
+    <p class="small">Enter details above and click Generate BOQ.</p>
   </div>
 
 </div>
@@ -252,33 +307,48 @@ function num(id) {
 }
 
 function generateEstimate() {
-  let projectName = val("projectName");
-  let builder = val("builder");
-  let location = val("location");
-  let deadline = val("deadline");
-  let slabType = val("slabType");
+  const projectName = val("projectName");
+  const builder = val("builder");
+  const location = val("location");
+  const deadline = val("deadline");
+  const slabType = val("slabType");
 
-  let slabArea = num("slabArea");
-  let slabThickness = num("slabThickness");
-  let slabVolume = slabArea * (slabThickness / 1000);
+  const slabArea = num("slabArea");
+  const slabThickness = num("slabThickness");
+  const slabVolume = slabArea * (slabThickness / 1000);
 
-  let blindingArea = num("blindingArea");
-  let blindingThickness = num("blindingThickness");
-  let blindingVolume = blindingArea * (blindingThickness / 1000);
+  const slabLength = num("slabLength");
+  const slabWidth = num("slabWidth");
+  const formworkPerimeter = slabLength && slabWidth ? (slabLength + slabWidth) * 2 : 0;
 
-  let pierQty = num("pierQty");
-  let pierDiameter = num("pierDiameter");
-  let pierDepth = num("pierDepth");
-  let radius = (pierDiameter / 1000) / 2;
-  let pierVolume = pierQty * Math.PI * radius * radius * pierDepth;
+  const sheetArea = num("sheetArea");
+  const wasteFactor = num("wasteFactor");
+  const meshSheets = sheetArea ? (slabArea / sheetArea) * (1 + wasteFactor / 100) : 0;
 
-  let cutVolume = num("cutVolume");
-  let fillVolume = num("fillVolume");
-  let exportVolume = num("exportVolume");
+  const edgeLength = num("edgeLength");
+  const edgeWidth = num("edgeWidth") / 1000;
+  const edgeDepth = num("edgeDepth") / 1000;
+  const edgeBeamVolume = edgeLength * edgeWidth * edgeDepth;
 
-  let totalConcrete = slabVolume + blindingVolume + pierVolume;
+  const pierQty = num("pierQty");
+  const pierDiameter = num("pierDiameter");
+  const pierDepth = num("pierDepth");
+  const pierRadius = (pierDiameter / 1000) / 2;
+  const pierVolume = pierQty * Math.PI * pierRadius * pierRadius * pierDepth;
 
-  let output = `
+  const cutVolume = num("cutVolume");
+  const fillVolume = num("fillVolume");
+  const looseFactor = num("looseFactor");
+  const netCutFill = cutVolume - fillVolume;
+  const looseExport = netCutFill > 0 ? netCutFill * looseFactor : 0;
+
+  const blindingArea = num("blindingArea");
+  const blindingThickness = num("blindingThickness");
+  const blindingVolume = blindingArea * (blindingThickness / 1000);
+
+  const totalConcrete = slabVolume + edgeBeamVolume + pierVolume + blindingVolume;
+
+  document.getElementById("output").innerHTML = `
     <h2>Professional Tender BOQ</h2>
 
     <h3>Project Summary</h3>
@@ -289,37 +359,59 @@ function generateEstimate() {
       <tr><td>Location</td><td>${location}</td></tr>
       <tr><td>Tender Deadline</td><td>${deadline}</td></tr>
       <tr><td>Slab Type</td><td>${slabType}</td></tr>
+      <tr><td>Pump Required</td><td>${val("pumpRequired")}</td></tr>
     </table>
 
-    <h3>Quantity Takeoff</h3>
+    <h3>Concrete Quantity Takeoff</h3>
     <table>
       <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
       <tr><td>Slab Area</td><td>${slabArea.toFixed(2)}</td><td>m²</td></tr>
       <tr><td>Slab Thickness</td><td>${slabThickness.toFixed(0)}</td><td>mm</td></tr>
       <tr><td>Slab Concrete Volume</td><td>${slabVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Blinding Concrete Volume</td><td>${blindingVolume.toFixed(2)}</td><td>m³</td></tr>
+      <tr><td>Edge Beam / Thickening Volume</td><td>${edgeBeamVolume.toFixed(2)}</td><td>m³</td></tr>
       <tr><td>Bored Pier Concrete Volume</td><td>${pierVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td><b>Total Estimated Concrete</b></td><td><b>${totalConcrete.toFixed(2)}</b></td><td><b>m³</b></td></tr>
-      <tr><td>Cut Volume</td><td>${cutVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Fill Volume</td><td>${fillVolume.toFixed(2)}</td><td>m³</td></tr>
-      <tr><td>Export / Disposal Volume</td><td>${exportVolume.toFixed(2)}</td><td>m³</td></tr>
+      <tr><td>Blinding Concrete Volume</td><td>${blindingVolume.toFixed(2)}</td><td>m³</td></tr>
+      <tr class="highlight"><td>Total Estimated Concrete</td><td>${totalConcrete.toFixed(2)}</td><td>m³</td></tr>
     </table>
 
-    <h3>Reinforcement</h3>
-    <p><b>Mesh Type:</b> ${val("meshType")}</p>
-    <p><b>Reinforcement Notes:</b><br>${val("reoNotes")}</p>
+    <h3>Reinforcement Takeoff</h3>
+    <table>
+      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
+      <tr><td>Mesh Type</td><td>${val("meshType")}</td><td>-</td></tr>
+      <tr><td>Mesh Sheet Allowance</td><td>${sheetArea.toFixed(2)}</td><td>m²/sheet</td></tr>
+      <tr><td>Waste Factor</td><td>${wasteFactor.toFixed(1)}</td><td>%</td></tr>
+      <tr class="highlight"><td>Estimated Mesh Sheets Required</td><td>${Math.ceil(meshSheets)}</td><td>sheets</td></tr>
+    </table>
+
+    <h3>Earthworks Takeoff</h3>
+    <table>
+      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
+      <tr><td>Cut Volume - Solid</td><td>${cutVolume.toFixed(2)}</td><td>m³</td></tr>
+      <tr><td>Fill Volume</td><td>${fillVolume.toFixed(2)}</td><td>m³</td></tr>
+      <tr><td>Net Cut / Fill Difference</td><td>${netCutFill.toFixed(2)}</td><td>m³</td></tr>
+      <tr><td>Loose Export Volume</td><td>${looseExport.toFixed(2)}</td><td>m³</td></tr>
+    </table>
+
+    <h3>Formwork / Perimeter</h3>
+    <table>
+      <tr><th>Description</th><th>Quantity</th><th>Unit</th></tr>
+      <tr><td>Estimated Slab Perimeter</td><td>${formworkPerimeter.toFixed(2)}</td><td>m</td></tr>
+    </table>
 
     <h3>Scope of Works</h3>
     <ul>
       <li>Review of structural, civil and architectural documentation.</li>
       <li>Set-out coordination based on approved drawings.</li>
-      <li>Formwork preparation to slab edges, rebates and set-downs where applicable.</li>
-      <li>Supply and installation of nominated reinforcement as per documentation.</li>
+      <li>Formwork preparation to slab edges, rebates, step-downs and thickening where applicable.</li>
+      <li>Supply and installation of nominated reinforcement as per structural documentation.</li>
       <li>Concrete placement, screeding and finishing to nominated slab areas.</li>
       <li>Installation of bored piers where nominated above.</li>
       <li>Blinding layer where nominated above.</li>
       <li>General coordination with builder and site team during works.</li>
     </ul>
+
+    <h3>Reinforcement Notes</h3>
+    <p>${val("reoNotes")}</p>
 
     <h3>Earthworks Notes</h3>
     <p>${val("earthNotes")}</p>
@@ -329,10 +421,11 @@ function generateEstimate() {
 
     <h3>Assumptions</h3>
     <ul>
-      <li>Quantities are based on information entered and available drawings/details.</li>
-      <li>Concrete volumes are calculated from slab area and nominated thickness.</li>
-      <li>Pier volumes are calculated using circular pier formula based on quantity, diameter and depth.</li>
-      <li>Final quantities are subject to confirmation against IFC drawings and site conditions.</li>
+      <li>Quantities are based on information entered into this system.</li>
+      <li>Final quantities are subject to review against IFC drawings and site conditions.</li>
+      <li>Concrete volumes are calculated from nominated dimensions and do not include wastage unless separately allowed.</li>
+      <li>Mesh sheet quantity includes nominated waste factor.</li>
+      <li>Loose export volume is calculated using the nominated loose conversion factor.</li>
       <li>No pricing, rates or dollar values are included in this BOQ.</li>
     </ul>
 
@@ -346,8 +439,6 @@ function generateEstimate() {
       <li>${val("exclusions")}</li>
     </ul>
   `;
-
-  document.getElementById("output").innerHTML = output;
 }
 </script>
 

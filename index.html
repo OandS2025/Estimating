@@ -278,6 +278,16 @@
     </div>
 
     <div class="box">
+      <h3>Margin &amp; GST</h3>
+
+      <label>Overhead (%)</label>
+      <input type="number" id="overheadPct" value="10" step="0.5">
+
+      <label>Margin (%)</label>
+      <input type="number" id="marginPct" value="15" step="0.5">
+    </div>
+
+    <div class="box">
       <h3>Scope Notes</h3>
 
       <label>Pump Required?</label>
@@ -332,6 +342,16 @@ function generateEstimate() {
   const concreteSupplyCost = slabVolume * concreteRate;
   const slabLabourCost = slabArea * labourRate;
   const slabTotalCost = concreteSupplyCost + slabLabourCost + pumpAllowance;
+
+  const overheadPct = num("overheadPct") / 100;
+  const marginPct = num("marginPct") / 100;
+  const directCost = slabTotalCost;
+  const overheadAmt = directCost * overheadPct;
+  const subtotalBeforeMargin = directCost + overheadAmt;
+  const marginAmt = subtotalBeforeMargin * marginPct;
+  const finalExGST = subtotalBeforeMargin + marginAmt;
+  const gst = finalExGST * 0.10;
+  const finalIncGST = finalExGST + gst;
 
   const slabLength = num("slabLength");
   const slabWidth = num("slabWidth");
@@ -463,6 +483,18 @@ function generateEstimate() {
       <li>Dewatering unless specifically noted.</li>
       <li>${val("exclusions")}</li>
     </ul>
+
+    <h3>Final Pricing Summary</h3>
+    <table>
+      <tr><th>Item</th><th>Amount</th></tr>
+      <tr><td>Direct Cost (Slab)</td><td>$${directCost.toFixed(2)}</td></tr>
+      <tr><td>Overhead (${num("overheadPct")}%)</td><td>$${overheadAmt.toFixed(2)}</td></tr>
+      <tr><td>Subtotal (before margin)</td><td>$${subtotalBeforeMargin.toFixed(2)}</td></tr>
+      <tr><td>Margin (${num("marginPct")}%)</td><td>$${marginAmt.toFixed(2)}</td></tr>
+      <tr class="highlight"><td><strong>Final Price (Ex GST)</strong></td><td><strong>$${finalExGST.toFixed(2)}</strong></td></tr>
+      <tr><td>GST (10%)</td><td>$${gst.toFixed(2)}</td></tr>
+      <tr class="highlight"><td><strong>Final Price (Inc GST)</strong></td><td><strong>$${finalIncGST.toFixed(2)}</strong></td></tr>
+    </table>
   `;
 }
 </script>
